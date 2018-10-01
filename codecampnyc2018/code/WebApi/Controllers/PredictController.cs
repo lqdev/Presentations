@@ -11,11 +11,11 @@ namespace WebApi
     {
         // POST api/predict
         [HttpPost]
-        public async Task<string> Post(IrisData instance)
+        public async Task<ActionResult<string>> Post(IrisData instance)
         {
             var model = await Model.LoadZipModel("model.zip");
             var prediction = Model.MakePrediction(model,instance);
-            return prediction;
+            return Ok(prediction);
         }
     }
 }
