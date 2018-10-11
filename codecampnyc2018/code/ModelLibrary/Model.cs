@@ -1,9 +1,9 @@
-﻿using Microsoft.ML.Data;
-using Microsoft.ML;
+﻿using Microsoft.ML.Legacy;
+using Microsoft.ML.Legacy.Data;
 using Microsoft.ML.Runtime.Api;
-using Microsoft.ML.Trainers;
-using Microsoft.ML.Transforms;
-using Microsoft.ML.Models;
+using Microsoft.ML.Legacy.Trainers;
+using Microsoft.ML.Legacy.Transforms;
+using Microsoft.ML.Legacy.Models;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,7 +12,7 @@ namespace ModelLibrary
 {
     public class Model
     {
-                public static async Task<PredictionModel<IrisData, IrisPrediction>> Train(string dataPath, string modelPath)
+        public static async Task<PredictionModel<IrisData, IrisPrediction>> Train(string dataPath, string modelPath)
         {
             //Initialize Learning Pipeline
             LearningPipeline pipeline = new LearningPipeline();
@@ -45,17 +45,17 @@ namespace ModelLibrary
 
         public static async Task<PredictionModel<IrisData, IrisPrediction>> LoadZipModel(string modelPath)
         {
-            var model = await PredictionModel.ReadAsync<IrisData,IrisPrediction>(modelPath);
+            var model = await PredictionModel.ReadAsync<IrisData, IrisPrediction>(modelPath);
             return model;
         }
 
         public static async Task<PredictionModel<IrisData, IrisPrediction>> LoadSerializeModel(Stream serializedModel)
         {
-            var model = await PredictionModel.ReadAsync<IrisData,IrisPrediction>(serializedModel);
+            var model = await PredictionModel.ReadAsync<IrisData, IrisPrediction>(serializedModel);
             return model;
         }
 
-        public static string MakePrediction(PredictionModel<IrisData,IrisPrediction> model,IrisData input)
+        public static string MakePrediction(PredictionModel<IrisData, IrisPrediction> model, IrisData input)
         {
             var prediction = model.Predict(input);
             return prediction.PredictedLabels;
