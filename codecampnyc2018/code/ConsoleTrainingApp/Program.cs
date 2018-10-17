@@ -12,7 +12,7 @@ namespace ConsoleTrainingApp
 
             string modelPath = "model.zip";
 
-            var model = Model.Train(dataPath, modelPath).Result;
+            var model = Model.TrainModel(dataPath, modelPath).Result;
 
             // Test data for prediction
             IrisData input = new IrisData()

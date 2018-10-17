@@ -12,7 +12,7 @@ namespace ModelLibrary
 {
     public class Model
     {
-        public static async Task<PredictionModel<IrisData, IrisPrediction>> Train(string dataPath, string modelPath)
+        public static async Task<PredictionModel<IrisData, IrisPrediction>> TrainModel(string dataPath, string modelPath)
         {
             //Initialize Learning Pipeline
             LearningPipeline pipeline = new LearningPipeline();
