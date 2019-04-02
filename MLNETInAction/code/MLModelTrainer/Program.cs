@@ -55,10 +55,12 @@ namespace MLModelTrainer
 
             Console.WriteLine("The prediction is {0}", prediction);
 
-            Console.ReadKey();
-
             //Save Model
             Operations.SaveModel(mlContext, trainedModel, "iris_model.zip");
+
+            Console.ReadKey();
+
+            
         }
     }
 }
