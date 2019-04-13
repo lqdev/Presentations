@@ -1,0 +1,6 @@
+source https://www.nuget.org/api/v2
+nuget Deedle
+nuget FSharp.Formatting
+nuget XPlot.GoogleCharts
+nuget XPlot.GoogleCharts.Deedle
+nuget Xplot.Plotly

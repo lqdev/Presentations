@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!--
+      The Welcome to FsLab journal parameters will be replaced with the
+      document title extracted from the <h1> element or
+      file name, if there is no <h1> heading
+    -->
+    <title>Welcome to FsLab journal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="styles/style.css" />
+    <script src="styles/tips.js" type="text/javascript"></script>
+    
+  <style type="text/css">
+    .grid {
+      font-size:11pt;
+      font-family:sans-serif;
+      color:#000000;
+    }
+
+    .grid ::-webkit-scrollbar  {
+      width:6px;
+      height:6px;
+      background:transparent;
+    }
+
+    .grid ::-webkit-scrollbar-track {
+      background:transparent;
+    }
+
+    .grid ::-webkit-scrollbar-thumb {
+      border-radius:3px;
+      background-color:#c1c1c1;
+    }
+
+    .grid .faded {
+      color:#a0a0a0;
+    }
+
+    .grid tr {
+      background-color: #fdfdfd;
+    }
+
+    .grid tbody tr:nth-child(odd) {
+      background-color: #f4f4f4;
+    }
+
+    .grid thead tr {
+      background: #fdfdfd;
+    }
+
+    .grid table {
+      top:0px;
+      left:0px;
+      width:100%;
+      border-spacing: 0;
+      border-collapse: collapse;
+    }
+
+    .grid td, .grid th {
+      border-bottom:1px solid #a0a0a0;
+      padding:4px 10px 4px 10px;
+      min-width:50px;
+    }
+
+    .grid thead th {
+      border-bottom:3px solid #a0a0a0;
+    }
+
+    .grid th {
+      padding:4px 20px 4px 10px;
+      text-align:left;
+      font-weight:bold;
+    }
+
+    .live-grid {
+      position:relative;
+      overflow:hidden;
+    }
+
+    .live-grid .scroller {
+      overflow-y: scroll;
+      position:absolute;
+      width:100%;
+    }
+
+    .live-grid table {
+      position:absolute;
+    }
+  </style>
+
+  <script type="text/javascript">
+    function setupGrid(id, viewHeight, serviceUrl) {
+
+      // Create table with given column names & specified number of empty rows
+      function createRows(rowCount, columns) {
+        var head = $(id + " .head").empty();
+        $("<th />").html("#").appendTo(head);
+        for (var i = 0; i < columns.length; i++) {
+          $("<th />").html(columns[i]).appendTo(head);
+        }
+
+        var rows = [];
+        var body = $(id + " .body").empty();
+        for (var i = 0; i < rowCount; i++) {
+          var row = { columns: [] };
+          var tr = $("<tr />").appendTo(body);
+          var th = $("<th />").html("&nbsp;").appendTo(tr);
+          for (var j = 0; j < columns.length; j++) {
+            row.columns.push($("<td />").html("&nbsp;").appendTo(tr));
+          }
+          row.key = th;
+          row.tr = tr;
+          rows.push(row);
+        }
+        return rows;
+      }
+
+      // Once we receive meta-data about the grid from the servier, 
+      // we create the grid, set height of scrollbar and register 
+      // scroll event to update the data on change
+      function initialize(meta) {
+        var rowHeight = $(id + " tbody tr").height() - 1; // Magic constant
+        var thHeight = $(id + " thead tr").height() + 2; // Magic constant 
+        var totalRows = meta.rows;
+        var viewCount = Math.ceil((viewHeight - thHeight) / rowHeight - 1);
+        var tableHeight = rowHeight * Math.min(viewCount, totalRows);
+
+        // Resize and report new size to FSI container (if defined)
+        $(id + " .spacer").css("min-height", (rowHeight * totalRows) + "px");
+        $(id).height(tableHeight + thHeight);
+        $(id + " .scroller").css("margin-top", thHeight + "px");
+        $(id + " .scroller").height(tableHeight);
+        if (window.fsiResizeContent) window.fsiResizeContent();
+
+        // Create table rows of the view
+        var rows = createRows(viewCount, meta.columns);
+        
+        // Update that gets triggered once the current one is done
+        var nextUpdate = null;
+
+        // Update the displayed data on scroll
+        function update(offset) {
+          nextUpdate = offset;
+          for (var i = 0; i < viewCount; i++) {
+            rows[i].tr.show();
+            rows[i].key.addClass("faded");
+            for (var j = 0; j < rows[i].columns.length; j++)
+              rows[i].columns[j].addClass("faded");
+          }
+
+          $.ajax({ url: serviceUrl + "/rows/" + offset + "?count=" + viewCount }).done(function (res) {
+            var data = JSON.parse(res);
+            for (var i = 0; i < viewCount; i++) {
+              var point = data[i];
+              if (point == null) rows[i].tr.hide();
+              else {
+                rows[i].tr.show();
+                rows[i].key.removeClass("faded").html(point.key);
+                for (var j = 0; j < rows[i].columns.length; j++)
+                  rows[i].columns[j].removeClass("faded").html(point.columns[j]);
+              }
+            }
+            if (nextUpdate != null && nextUpdate != offset) {
+              console.log("Next: {0}", nextUpdate);
+              update(nextUpdate);
+            }
+            nextUpdate = null;
+          });
+        }
+
+        // Setup scroll handler & call to load first block of data
+        $(id + " .scroller").on("scroll", function () {
+          var offset = Math.ceil($(id + " .scroller").scrollTop() / rowHeight);
+          if (nextUpdate == null)
+            update(offset);
+          else
+            nextUpdate = offset;
+        });
+        update(0);
+      }
+
+      $.ajax({ url: serviceUrl + "/metadata" }).done(function (res) {
+        initialize(JSON.parse(res));
+      });
+    }
+  </script>
+<script type="text/javascript">
+        $(function () { setupGrid("#fslab-grid-16680-1", 500, "http://localhost:9468/0"); });
+      </script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+        google.charts.load('current', {
+            packages: ["corechart", "annotationchart", "calendar", "gauge", "geochart", "map", "sankey", "table", "timeline", "treemap"]
+        });
+      $(function() { if (window.fsiResizeContent) window.fsiResizeContent($("body").height() + 10); });
+    </script>
+    <script language="javascript" type="text/javascript">
+      function init()
+      {
+        try {
+          websocket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/websocket");
+          websocket.onmessage = function(evt) { location.reload(); };
+        } catch (e) { /* silently ignore lack of websockets */ }
+      }
+      window.addEventListener("load", init, false);
+    </script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fslab.org">fslab.org</a></li>
+          <li><a href="http://fsharp.github.io/FSharp.Data/">FSharp.Data</a></li>
+          <li><a href="http://fslab.org/Deedle">Deedle</a></li>
+          <li><a href="http://fslab.org/RProvider">R Provider</a></li>
+          <li><a href="https://fslab.org/XPlot/">XPlot</a></li>
+          <li><a href="https://fslab.org/XPlot/">FSharp.Charting</a></li>
+          <li><a href="https://numerics.mathdotnet.com/">Math.NET Numerics</a></li>
+        </ul>
+        <h3 class="muted">Journal</h3>
+      </div>
+      <hr />
+      <div class="row" style="margin-top:30px">
+        <div class="span1"></div>
+        <div class="span10" id="main">
+          <h1>Welcome to FsLab journal</h1>
+<p>FsLab journal is a simple Visual Studio template that makes it easy to do
+interactive data analysis using F# Interactive and produce HTML or PDF
+to document your research.</p>
+<h2>Next steps</h2>
+<ul>
+<li>
+<p>To see how things work, run <code>build run</code> from the terminal to start the journal
+runner in the background (or hit <strong>F5</strong> in Visual Studio). Executing this
+project will turn this F# script into a report.</p>
+</li>
+<li>
+<p>To generate PDF from your experiments, you need to install <code>pdflatex</code> and
+have it accessible in the system <code>PATH</code> variable. Then you can run
+<code>build pdf</code> in the folder with this script (then check out <code>output</code> folder).</p>
+</li>
+</ul>
+<h2>Sample experiment</h2>
+<p>We start by referencing <code>Deedle</code> and <code>XPlot.GoogleCharts</code> libraries and then we
+load the contents of <em>this</em> file:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">Deedle</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">System</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="i">IO</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="i">XPlot</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs5', 5)" onmouseover="showTip(event, 'fs5', 5)" class="i">GoogleCharts</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs6', 6)" onmouseover="showTip(event, 'fs6', 6)" class="i">file</span> <span class="o">=</span> <span class="k">__SOURCE_DIRECTORY__</span> <span class="o">+</span> <span class="s">&quot;/Experiment1.fsx&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs7', 7)" onmouseover="showTip(event, 'fs7', 7)" class="i">contents</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 8)" onmouseover="showTip(event, 'fs8', 8)" class="t">File</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs9', 9)" onmouseover="showTip(event, 'fs9', 9)" class="f">ReadAllText</span>(<span onmouseout="hideTip(event, 'fs6', 10)" onmouseover="showTip(event, 'fs6', 10)" class="i">file</span>)
+<span onmouseout="hideTip(event, 'fs10', 11)" onmouseover="showTip(event, 'fs10', 11)" class="f">printfn</span> <span class="s">&quot;Loaded &#39;</span><span class="pf">%s</span><span class="s">&#39; of length </span><span class="pf">%d</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs6', 12)" onmouseover="showTip(event, 'fs6', 12)" class="i">file</span> <span onmouseout="hideTip(event, 'fs7', 13)" onmouseover="showTip(event, 'fs7', 13)" class="i">contents</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs11', 14)" onmouseover="showTip(event, 'fs11', 14)" class="i">Length</span>
+</code></pre></td>
+</tr>
+</table>
+<table class="pre"><tr><td><pre><code>Loaded 'C:\Users\lqdev\Development\Presentations\SouthernFriedFSharp2019\code\FsLabJournal\Experiment1/Experiment1.fsx' of length 2125</code></pre></td></tr></table>
+<p>Now, we split the contents of the file into words, count the frequency of
+words longer than 3 letters and turn the result into a Deedle series:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs12', 15)" onmouseover="showTip(event, 'fs12', 15)" class="i">words</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs7', 16)" onmouseover="showTip(event, 'fs7', 16)" class="i">contents</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 17)" onmouseover="showTip(event, 'fs13', 17)" class="f">Split</span>(<span class="s">&#39; &#39;</span>, <span class="s">&#39;&quot;&#39;</span>, <span class="s">&#39;\n&#39;</span>, <span class="s">&#39;\r&#39;</span>, <span class="s">&#39;*&#39;</span>)
+  <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs14', 18)" onmouseover="showTip(event, 'fs14', 18)" class="t">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 19)" onmouseover="showTip(event, 'fs15', 19)" class="f">filter</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs16', 20)" onmouseover="showTip(event, 'fs16', 20)" class="i">s</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs16', 21)" onmouseover="showTip(event, 'fs16', 21)" class="i">s</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs11', 22)" onmouseover="showTip(event, 'fs11', 22)" class="i">Length</span> <span class="o">&gt;</span> <span class="n">3</span>)
+  <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs14', 23)" onmouseover="showTip(event, 'fs14', 23)" class="t">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 24)" onmouseover="showTip(event, 'fs17', 24)" class="f">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs16', 25)" onmouseover="showTip(event, 'fs16', 25)" class="i">s</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs16', 26)" onmouseover="showTip(event, 'fs16', 26)" class="i">s</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs18', 27)" onmouseover="showTip(event, 'fs18', 27)" class="f">ToLower</span>())
+  <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs19', 28)" onmouseover="showTip(event, 'fs19', 28)" class="t">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 29)" onmouseover="showTip(event, 'fs20', 29)" class="f">countBy</span> <span onmouseout="hideTip(event, 'fs21', 30)" onmouseover="showTip(event, 'fs21', 30)" class="f">id</span>
+  <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs22', 31)" onmouseover="showTip(event, 'fs22', 31)" class="f">series</span>
+</code></pre></td>
+</tr>
+</table>
+<p>We can take the top 5 words occurring in this tutorial and see them in a chart:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span onmouseout="hideTip(event, 'fs12', 32)" onmouseover="showTip(event, 'fs12', 32)" class="i">words</span>
+<span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs23', 33)" onmouseover="showTip(event, 'fs23', 33)" class="t">Series</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs24', 34)" onmouseover="showTip(event, 'fs24', 34)" class="f">sort</span>
+<span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs23', 35)" onmouseover="showTip(event, 'fs23', 35)" class="t">Series</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs25', 36)" onmouseover="showTip(event, 'fs25', 36)" class="f">rev</span>
+<span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs23', 37)" onmouseover="showTip(event, 'fs23', 37)" class="t">Series</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs26', 38)" onmouseover="showTip(event, 'fs26', 38)" class="f">take</span> <span class="n">7</span>
+</code></pre></td>
+</tr>
+</table>
+<div class="fslab-html-output"><div class="grid live-grid" id="fslab-grid-16680-1">
+    <table>
+      <thead>
+        <tr class="head"><th>#</th><th>&nbsp;</th></tr>
+      </thead>
+      <tbody class="body">
+        <tr><th>&nbsp;</th><td>&nbsp;</td></tr>
+      </tbody>
+    </table>
+    <div class="scroller">
+      <div class="spacer"></div>
+    </div>
+  </div>
+  </div>
+<p>Finally, we can take the same 6 words and call <code>Chart.Column</code> to see them in a chart:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span onmouseout="hideTip(event, 'fs12', 39)" onmouseover="showTip(event, 'fs12', 39)" class="i">words</span>
+<span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs23', 40)" onmouseover="showTip(event, 'fs23', 40)" class="t">Series</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs24', 41)" onmouseover="showTip(event, 'fs24', 41)" class="f">sort</span>
+<span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs23', 42)" onmouseover="showTip(event, 'fs23', 42)" class="t">Series</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs25', 43)" onmouseover="showTip(event, 'fs25', 43)" class="f">rev</span>
+<span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs23', 44)" onmouseover="showTip(event, 'fs23', 44)" class="t">Series</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs26', 45)" onmouseover="showTip(event, 'fs26', 45)" class="f">take</span> <span class="n">7</span>
+<span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs27', 46)" onmouseover="showTip(event, 'fs27', 46)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs28', 47)" onmouseover="showTip(event, 'fs28', 47)" class="f">Column</span>
+</code></pre></td>
+</tr>
+</table>
+<div class="fslab-html-output"><script type="text/javascript">
+    google.charts.setOnLoadCallback(drawChart);
+            function drawChart() {
+                if ("")
+                    google.visualization.mapsApiKey = ""
+
+                var data = new google.visualization.DataTable({"cols": [{"type": "string" ,"id": "Column 1" ,"label": "Column 1" }, {"type": "number" ,"id": "Column 2" ,"label": "Column 2" }], "rows" : [{"c" : [{"v": "words"}, {"v": 6}]}, {"c" : [{"v": "this"}, {"v": 5}]}, {"c" : [{"v": "file"}, {"v": 3}]}, {"c" : [{"v": "open"}, {"v": 3}]}, {"c" : [{"v": "into"}, {"v": 3}]}, {"c" : [{"v": "journal"}, {"v": 3}]}, {"c" : [{"v": "contents"}, {"v": 3}]}]});
+
+                
+
+                var options = {"backgroundColor":{"fill":"transparent"},"chartArea":{"backgroundColor":{"fill":"#f4f4f4"}},"colors":["#1f77b4","#aec7e8","#ff7f0e","#ffbb78","#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f","#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"],"hAxis":{"baselineColor":"#fdfdfd","gridlines":{"color":"#fdfdfd"},"textStyle":{"color":"#000000"}},"legend":{"position":"none","textStyle":{"color":"#000000"}},"titleTextStyle":{"color":"#000000"},"vAxis":{"baselineColor":"#fdfdfd","gridlines":{"color":"#fdfdfd"},"textStyle":{"color":"#000000"}},"datalessRegionColor":"#fdfdfd"} 
+
+                var chart = new google.visualization.ColumnChart(document.getElementById('8d0a601a-144a-46ff-98ae-0a7198f694ea'));
+                chart.draw(data, options);
+            }
+</script>
+<div id="8d0a601a-144a-46ff-98ae-0a7198f694ea" style="width: 800px; height: 450px;"></div></div>
+<h2>Summary</h2>
+<p>An image is worth a thousand words:</p>
+<p><img src="http://imgs.xkcd.com/comics/hofstadter.png" alt="" /></p>
+<div class="tip" id="fs1">namespace Deedle</div>
+<div class="tip" id="fs2">namespace System</div>
+<div class="tip" id="fs3">namespace System.IO</div>
+<div class="tip" id="fs4">namespace XPlot</div>
+<div class="tip" id="fs5">namespace XPlot.GoogleCharts</div>
+<div class="tip" id="fs6">val file : string<br /><br />Full name: Experiment1.file</div>
+<div class="tip" id="fs7">val contents : string<br /><br />Full name: Experiment1.contents</div>
+<div class="tip" id="fs8">type File =<br />&#160;&#160;static member AppendAllLines : path:string * contents:IEnumerable&lt;string&gt; -&gt; unit + 1 overload<br />&#160;&#160;static member AppendAllText : path:string * contents:string -&gt; unit + 1 overload<br />&#160;&#160;static member AppendText : path:string -&gt; StreamWriter<br />&#160;&#160;static member Copy : sourceFileName:string * destFileName:string -&gt; unit + 1 overload<br />&#160;&#160;static member Create : path:string -&gt; FileStream + 3 overloads<br />&#160;&#160;static member CreateText : path:string -&gt; StreamWriter<br />&#160;&#160;static member Decrypt : path:string -&gt; unit<br />&#160;&#160;static member Delete : path:string -&gt; unit<br />&#160;&#160;static member Encrypt : path:string -&gt; unit<br />&#160;&#160;static member Exists : path:string -&gt; bool<br />&#160;&#160;...<br /><br />Full name: System.IO.File</div>
+<div class="tip" id="fs9">File.ReadAllText(path: string) : string<br />File.ReadAllText(path: string, encoding: System.Text.Encoding) : string</div>
+<div class="tip" id="fs10">val printfn : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printfn</div>
+<div class="tip" id="fs11">property System.String.Length: int</div>
+<div class="tip" id="fs12">val words : Series&lt;string,int&gt;<br /><br />Full name: Experiment1.words</div>
+<div class="tip" id="fs13">System.String.Split([&lt;System.ParamArray&gt;] separator: char []) : string []<br />System.String.Split(separator: string [], options: System.StringSplitOptions) : string []<br />System.String.Split(separator: char [], options: System.StringSplitOptions) : string []<br />System.String.Split(separator: char [], count: int) : string []<br />System.String.Split(separator: string [], count: int, options: System.StringSplitOptions) : string []<br />System.String.Split(separator: char [], count: int, options: System.StringSplitOptions) : string []</div>
+<div class="tip" id="fs14">Multiple items<br />module Array<br /><br />from YoLo<br /><br />--------------------<br />module Array<br /><br />from Microsoft.FSharp.Collections</div>
+<div class="tip" id="fs15">val filter : predicate:(&#39;T -&gt; bool) -&gt; array:&#39;T [] -&gt; &#39;T []<br /><br />Full name: Microsoft.FSharp.Collections.Array.filter</div>
+<div class="tip" id="fs16">val s : string</div>
+<div class="tip" id="fs17">val map : mapping:(&#39;T -&gt; &#39;U) -&gt; array:&#39;T [] -&gt; &#39;U []<br /><br />Full name: Microsoft.FSharp.Collections.Array.map</div>
+<div class="tip" id="fs18">System.String.ToLower() : string<br />System.String.ToLower(culture: System.Globalization.CultureInfo) : string</div>
+<div class="tip" id="fs19">Multiple items<br />module Seq<br /><br />from YoLo<br /><br />--------------------<br />module Seq<br /><br />from Microsoft.FSharp.Collections</div>
+<div class="tip" id="fs20">val countBy : projection:(&#39;T -&gt; &#39;Key) -&gt; source:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;Key * int&gt; (requires equality)<br /><br />Full name: Microsoft.FSharp.Collections.Seq.countBy</div>
+<div class="tip" id="fs21">val id : x:&#39;T -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.Operators.id</div>
+<div class="tip" id="fs22">val series : observations:seq&lt;&#39;a * &#39;b&gt; -&gt; Series&lt;&#39;a,&#39;b&gt; (requires equality)<br /><br />Full name: Deedle.F# Series extensions.series</div>
+<div class="tip" id="fs23">Multiple items<br />module Series<br /><br />from Deedle<br /><br />--------------------<br />type Series =<br />&#160;&#160;new : ?type:string -&gt; Series<br />&#160;&#160;member ShouldSerializeannotations : unit -&gt; bool<br />&#160;&#160;member ShouldSerializeareaOpacity : unit -&gt; bool<br />&#160;&#160;member ShouldSerializecolor : unit -&gt; bool<br />&#160;&#160;member ShouldSerializecurveType : unit -&gt; bool<br />&#160;&#160;member ShouldSerializefallingColor : unit -&gt; bool<br />&#160;&#160;member ShouldSerializelineWidth : unit -&gt; bool<br />&#160;&#160;member ShouldSerializepointShape : unit -&gt; bool<br />&#160;&#160;member ShouldSerializepointSize : unit -&gt; bool<br />&#160;&#160;member ShouldSerializerisingColor : unit -&gt; bool<br />&#160;&#160;...<br /><br />Full name: XPlot.GoogleCharts.Configuration.Series<br /><br />--------------------<br />type Series&lt;&#39;K,&#39;V (requires equality)&gt; =<br />&#160;&#160;interface IFsiFormattable<br />&#160;&#160;interface ISeries&lt;&#39;K&gt;<br />&#160;&#160;new : pairs:seq&lt;KeyValuePair&lt;&#39;K,&#39;V&gt;&gt; -&gt; Series&lt;&#39;K,&#39;V&gt;<br />&#160;&#160;new : keys:&#39;K [] * values:&#39;V [] -&gt; Series&lt;&#39;K,&#39;V&gt;<br />&#160;&#160;new : keys:seq&lt;&#39;K&gt; * values:seq&lt;&#39;V&gt; -&gt; Series&lt;&#39;K,&#39;V&gt;<br />&#160;&#160;new : index:IIndex&lt;&#39;K&gt; * vector:IVector&lt;&#39;V&gt; * vectorBuilder:IVectorBuilder * indexBuilder:IIndexBuilder -&gt; Series&lt;&#39;K,&#39;V&gt;<br />&#160;&#160;member After : lowerExclusive:&#39;K -&gt; Series&lt;&#39;K,&#39;V&gt;<br />&#160;&#160;member Aggregate : aggregation:Aggregation&lt;&#39;K&gt; * observationSelector:Func&lt;DataSegment&lt;Series&lt;&#39;K,&#39;V&gt;&gt;,KeyValuePair&lt;&#39;TNewKey,OptionalValue&lt;&#39;R&gt;&gt;&gt; -&gt; Series&lt;&#39;TNewKey,&#39;R&gt; (requires equality)<br />&#160;&#160;member Aggregate : aggregation:Aggregation&lt;&#39;K&gt; * keySelector:Func&lt;DataSegment&lt;Series&lt;&#39;K,&#39;V&gt;&gt;,&#39;TNewKey&gt; * valueSelector:Func&lt;DataSegment&lt;Series&lt;&#39;K,&#39;V&gt;&gt;,OptionalValue&lt;&#39;R&gt;&gt; -&gt; Series&lt;&#39;TNewKey,&#39;R&gt; (requires equality)<br />&#160;&#160;member AsyncMaterialize : unit -&gt; Async&lt;Series&lt;&#39;K,&#39;V&gt;&gt;<br />&#160;&#160;...<br /><br />Full name: Deedle.Series&lt;_,_&gt;<br /><br />--------------------<br />new : ?type:string -&gt; Series<br /><br />--------------------<br />new : pairs:seq&lt;System.Collections.Generic.KeyValuePair&lt;&#39;K,&#39;V&gt;&gt; -&gt; Series&lt;&#39;K,&#39;V&gt;<br />new : keys:seq&lt;&#39;K&gt; * values:seq&lt;&#39;V&gt; -&gt; Series&lt;&#39;K,&#39;V&gt;<br />new : keys:&#39;K [] * values:&#39;V [] -&gt; Series&lt;&#39;K,&#39;V&gt;<br />new : index:Indices.IIndex&lt;&#39;K&gt; * vector:IVector&lt;&#39;V&gt; * vectorBuilder:Vectors.IVectorBuilder * indexBuilder:Indices.IIndexBuilder -&gt; Series&lt;&#39;K,&#39;V&gt;</div>
+<div class="tip" id="fs24">val sort : series:Series&lt;&#39;K,&#39;V&gt; -&gt; Series&lt;&#39;K,&#39;V&gt; (requires equality and comparison)<br /><br />Full name: Deedle.Series.sort</div>
+<div class="tip" id="fs25">val rev : series:Series&lt;&#39;K,&#39;T&gt; -&gt; Series&lt;&#39;K,&#39;T&gt; (requires equality)<br /><br />Full name: Deedle.Series.rev</div>
+<div class="tip" id="fs26">val take : count:int -&gt; series:Series&lt;&#39;K,&#39;T&gt; -&gt; Series&lt;&#39;K,&#39;T&gt; (requires equality)<br /><br />Full name: Deedle.Series.take</div>
+<div class="tip" id="fs27">type Chart =<br />&#160;&#160;static member Annotation : data:seq&lt;#seq&lt;DateTime * &#39;V * string * string&gt;&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart (requires &#39;V :&gt; value)<br />&#160;&#160;static member Annotation : data:seq&lt;DateTime * #value * string * string&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart<br />&#160;&#160;static member Area : data:seq&lt;#seq&lt;&#39;K * &#39;V&gt;&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart (requires &#39;K :&gt; key and &#39;V :&gt; value)<br />&#160;&#160;static member Area : data:seq&lt;#key * #value&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart<br />&#160;&#160;static member Area : data:seq&lt;#value&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart<br />&#160;&#160;static member Bar : data:seq&lt;#seq&lt;&#39;K * &#39;V&gt;&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart (requires &#39;K :&gt; key and &#39;V :&gt; value)<br />&#160;&#160;static member Bar : data:seq&lt;#key * #value&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart<br />&#160;&#160;static member Bar : data:seq&lt;#value&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart<br />&#160;&#160;static member Bubble : data:seq&lt;string * #value * #value * #value * #value&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart<br />&#160;&#160;static member Bubble : data:seq&lt;string * #value * #value * #value&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart<br />&#160;&#160;...<br /><br />Full name: XPlot.GoogleCharts.Chart</div>
+<div class="tip" id="fs28">static member Chart.Column : data:Frame&lt;&#39;K,&#39;V&gt; * ?Options:Options -&gt; GoogleChart (requires equality and equality)<br />static member Chart.Column : data:Series&lt;&#39;K,#value&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart (requires equality and &#39;K :&gt; key)<br />static member Chart.Column : data:seq&lt;Series&lt;&#39;K,#value&gt;&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart (requires equality and &#39;K :&gt; key)<br />static member Chart.Column : data:seq&lt;#seq&lt;&#39;K * &#39;V&gt;&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart (requires &#39;K :&gt; key and &#39;V :&gt; value)<br />static member Chart.Column : data:seq&lt;#key * #value&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart<br />static member Chart.Column : data:seq&lt;#value&gt; * ?Labels:seq&lt;string&gt; * ?Options:Options -&gt; GoogleChart</div>
+
+
+          
+        </div>
+        <div class="span1"></div>
+      </div>
+      <hr style="margin-top:50px;"/>
+      <footer class="footer" style="text-align:center">
+        Brought to you by the <a href="http://fslab.org">FsLab Contributors</a>.<br />
+        Submit <a href="https://github.com/fslaborg/FsLab">feedback on GitHub</a> and help us improve FsLab!
+      </footer>
+    </div>
+  </body>
+</html>
