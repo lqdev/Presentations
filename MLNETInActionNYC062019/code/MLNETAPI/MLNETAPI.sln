@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.705
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SentimentAnalysisLibrary", "SentimentAnalysisLibrary\SentimentAnalysisLibrary.csproj", "{EC20C2B8-5814-4E52-B095-C0B20DAA4ABA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SentimentAnalysisLibrary", "SentimentAnalysisLibrary\SentimentAnalysisLibrary.csproj", "{EC20C2B8-5814-4E52-B095-C0B20DAA4ABA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SentimentAnalysisConsole", "SentimentAnalysisConsole\SentimentAnalysisConsole.csproj", "{FC141CE2-5065-4994-B8DE-95B87AFDEFA7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SentimentAnalysisConsole", "SentimentAnalysisConsole\SentimentAnalysisConsole.csproj", "{FC141CE2-5065-4994-B8DE-95B87AFDEFA7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SentimentAnalysisWebAPI", "SentimentAnalysisWebAPI\SentimentAnalysisWebAPI.csproj", "{8C45BB86-825B-409C-A538-24A3372030F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SentimentAnalysisFunctionsApp", "SentimentAnalysisFunctionsApp\SentimentAnalysisFunctionsApp.csproj", "{2E6D4197-4C2E-41AF-BDEA-1E083881C998}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{FC141CE2-5065-4994-B8DE-95B87AFDEFA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC141CE2-5065-4994-B8DE-95B87AFDEFA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC141CE2-5065-4994-B8DE-95B87AFDEFA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C45BB86-825B-409C-A538-24A3372030F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C45BB86-825B-409C-A538-24A3372030F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C45BB86-825B-409C-A538-24A3372030F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C45BB86-825B-409C-A538-24A3372030F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E6D4197-4C2E-41AF-BDEA-1E083881C998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E6D4197-4C2E-41AF-BDEA-1E083881C998}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E6D4197-4C2E-41AF-BDEA-1E083881C998}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E6D4197-4C2E-41AF-BDEA-1E083881C998}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
