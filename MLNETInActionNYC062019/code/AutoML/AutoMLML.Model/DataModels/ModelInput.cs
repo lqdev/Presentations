@@ -16,7 +16,5 @@ namespace AutoMLML.Model.DataModels
 
         [ColumnName("Sentiment"), LoadColumn(1)]
         public bool Sentiment { get; set; }
-
-
     }
 }
