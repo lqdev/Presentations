@@ -27,6 +27,8 @@ namespace SentimentAnalysisConsole
             // Train model using training pipeline
             ITransformer model = TrainModel(trainingData, trainingPipeline);
 
+            var preview = model.Transform(testData).Preview();
+
             // Evaluate the model
             Evaluate(testData,model);
 
