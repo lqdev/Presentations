@@ -85,7 +85,7 @@ namespace SparkNETDataFrames
             joinedDf
                 .Write()
                 .Mode(SaveMode.Overwrite)
-                .Csv("output.csv");
+                .Csv("output");
         }
 
         public static string Tupper(string inspectionType)
