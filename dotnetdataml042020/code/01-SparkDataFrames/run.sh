@@ -1,0 +1,1 @@
+spark-submit --class org.apache.spark.deploy.dotnet.DotnetRunner --master local bin/Debug/netcoreapp3.1/publish/microsoft-spark-2.4.x-0.10.0.jar dotnet bin/Debug/netcoreapp3.1/publish/SparkDataFrames.dll
