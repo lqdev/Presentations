@@ -1,15 +1,19 @@
 import pulumi
-from pulumi_azure import core, storage
+from pulumi import ResourceOptions
+from pulumi_azure import core, cognitive
 
-# Create an Azure Resource Group
-resource_group = core.ResourceGroup('resource_group')
+attendees = ['alice','bob']
 
-# Create an Azure resource (Storage Account)
-account = storage.Account('storage',
-                          # The location for the storage account will be derived automatically from the resource group.
-                          resource_group_name=resource_group.name,
-                          account_tier='Standard',
-                          account_replication_type='LRS')
+for i in attendees:
+    resource_name = "iaac-cv-pulumi-{0}".format(i)
 
-# Export the connection string for the storage account
-pulumi.export('connection_string', account.primary_connection_string)
+    # Create an Azure resource (Cognitive Services Account)
+    cvaccount = cognitive.Account(resource_name,
+                            # The location for the resource will be derived automatically from the resource group.
+                            name=resource_name,
+                            resource_group_name='iaac-rg',
+                            kind='ComputerVision',
+                            sku_name='S1',opts=ResourceOptions(delete_before_replace=True))
+
+    # Export the resource endpoint for the cognitive services resource
+    pulumi.export('endpoint', cvaccount.endpoint)
