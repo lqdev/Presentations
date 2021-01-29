@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.Spark</id>
+    <version>0.12.1</version>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <license type="file">LICENSE</license>
+    <licenseUrl>https://aka.ms/deprecateLicenseUrl</licenseUrl>
+    <icon>Icon.png</icon>
+    <projectUrl>https://github.com/dotnet/spark</projectUrl>
+    <description>.NET for Apache Spark</description>
+    <releaseNotes>https://github.com/dotnet/spark/tree/master/docs/release-notes</releaseNotes>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>spark dotnet csharp</tags>
+    <serviceable>true</serviceable>
+    <repository type="git" url="https://github.com/dotnet/spark" commit="2f90321c3d7b6aea9485c09f1b6383fce5cf4a3b" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Apache.Arrow" version="0.14.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CSharp" version="4.5.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Data.Analysis" version="0.4.0" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="Razorvine.Pyrolite" version="4.26.0" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.5.2" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.1">
+        <dependency id="Apache.Arrow" version="0.14.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CSharp" version="4.5.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Data.Analysis" version="0.4.0" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="Razorvine.Pyrolite" version="4.26.0" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.5.2" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>
